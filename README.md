@@ -16,5 +16,3 @@ To get started with this project, follow these steps:
 1. Clone the repository: `git clone https://github.com/Ofer-Levi-46/Prom.git`
 2. Install dependencies: run `pip install numpy scipy matplotlib sounddevice`
 3. Run the project: choose your appropriate file, and run them!
-# Prom
-# Prom
