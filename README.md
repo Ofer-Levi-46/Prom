@@ -17,3 +17,4 @@ To get started with this project, follow these steps:
 2. Install dependencies: run `pip install numpy scipy matplotlib sounddevice`
 3. Run the project: choose your appropriate file, and run them!
 # Prom
+# Prom
