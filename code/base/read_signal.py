@@ -63,6 +63,8 @@ def read_signal(filename: str) -> str:
 
     # === Output ===
     # Convert bits to string
-    decoded_string = ''.join(str(bit) for bit in decoded_bits)
-    decoded_string = ''.join(chr(int(decoded_string[i:i+8], 2)) for i in range(0, len(decoded_string), 8))
-    return decoded_string
+    # decoded_string = ''.join(str(bit) for bit in decoded_bits)
+    # decoded_string = ''.join(chr(int(decoded_string[i:i+8], 2)) for i in range(0, len(decoded_string), 8))
+    # return decoded_string
+
+    return decoded_bits

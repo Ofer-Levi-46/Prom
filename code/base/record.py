@@ -20,6 +20,6 @@ def record(filename: str, duration: int = 5) -> None:
     print(f"Recording finished. Saving to {filename}")
 
     # === Save as WAV ===
-    write(filename, fs, audio)
+    write("records/" + filename, fs, audio)
 
     print("File saved successfully!")
