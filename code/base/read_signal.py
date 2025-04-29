@@ -46,6 +46,9 @@ def read_signal(filename: str) -> list[int]:
 
     for i in range(0, len(signal), samples_per_symbol):
         chunk = signal[i:i + samples_per_symbol]
+
+        if len(chunk) < samples_per_symbol:
+            continue
         
         # Correlate with reference signals
         correlation_f0 = np.sum(chunk * ref_f0)
@@ -57,4 +60,4 @@ def read_signal(filename: str) -> list[int]:
         else:
             bits.append(0)
 
-    return bits
+    return np.array(bits)

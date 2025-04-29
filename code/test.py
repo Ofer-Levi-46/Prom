@@ -7,13 +7,20 @@ import wave
 import matplotlib.pyplot as plt
 
 # ENCODE
-# data = string_to_bits("Hello World! My name is QPSK")
+# data = string_to_bits("Hello World")
 # generate_signal(data, "output.wav")
 
 # record("record.wav", 5)  # Record audio for 5 seconds
 
-# # DECODE
+# DECODE
+string = string_to_bits("Hello World")
 data = read_signal("record.wav")
+
+# count how many bits in data are different from string
+diff_count = sum(1 for i in range(len(data)) if data[i] != string[i])
+print(f"Number of differing bits: {diff_count}")
+# print(f"Success rate: {100 - (diff_count / len(data) * 100)}%")
+
 decoded_string = ''.join(str(bit) for bit in data)
 decoded_string = ''.join(chr(int(decoded_string[i:i+8], 2)) for i in range(0, len(decoded_string), 8))
-print(f"Final: {decoded_string}")
+print(f"Final string: {decoded_string}")
