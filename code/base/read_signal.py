@@ -51,8 +51,8 @@ def read_signal(filename: str) -> list[int]:
             continue
         
         # Correlate with reference signals
-        correlation_f0 = np.sum(chunk * ref_f0)
-        correlation_f1 = np.sum(chunk * ref_f1)
+        correlation_f0 = np.max(np.correlate(chunk, ref_f0, mode='valid'))
+        correlation_f1 = np.max(np.correlate(chunk, ref_f1, mode='valid'))
         
         # Decide bit based on higher correlation
         if correlation_f1 > correlation_f0:

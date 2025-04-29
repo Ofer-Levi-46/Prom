@@ -1,7 +1,7 @@
 {
-    "frequency": 1000,
+    "frequency": 10000,
     "sampling_rate": 48000,
-    "symbols_per_second": 100,
+    "symbols_per_second": 500,
     "record_start": "qfyDyZuE",
     "record_end": "HGksCmPV"
 }

@@ -2,6 +2,9 @@ import numpy as np
 from base.helper import string_to_bits
 from base.helper import *
 import scipy.io.wavfile as wavfile
+import matplotlib.pyplot as plt
+
+delta_f = samples_per_symbol
 
 
 def read_signal_bps(filename: str) -> list[int]:
@@ -29,19 +32,32 @@ def read_signal_bps(filename: str) -> list[int]:
     signal = (data / 32767.0).astype(np.float32)
     bits = []
 
-    start_wave = generate_wave(string_to_bits(record_start_key))
-    end_wave = generate_wave(string_to_bits(record_end_key))
+    start_wave = generate_wave_bps(string_to_bits(record_start_key))
+    end_wave = generate_wave_bps(string_to_bits(record_end_key))
     # plot the correlation of the signal with the start and end waves
 
     start = np.argmax(np.correlate(signal, start_wave, mode='valid'))
     end = np.argmax(np.correlate(signal, end_wave, mode='valid'))
+
+    # # plot the signal and the start and end waves, all as subplots
+    # plt.subplot(3, 1, 1)
+    # plt.plot(signal)
+    # plt.title('Signal')
+    # plt.subplot(3, 1, 2)
+    # plt.plot(start_wave)
+    # plt.title('Start Wave')
+    # plt.subplot(3, 1, 3)
+    # plt.plot(end_wave)
+    # plt.title('End Wave')
+    # plt.show()
+
     signal = signal[start + len(start_wave):end]
 
     t = np.linspace(0, symbol_time, samples_per_symbol, endpoint=False)
-    ref_f0 = np.cos(2 * np.pi * (fc - (fc / 4)) * t)
-    ref_f1 = np.cos(2 * np.pi * (fc + (fc / 4)) * t)
-    ref_f2 = np.cos(2 * np.pi * (fc - (fc / 8)) * t)
-    ref_f3 = np.cos(2 * np.pi * (fc + (fc / 8)) * t)
+    ref_f0 = np.cos(2 * np.pi * (fc - 1.5 * delta_f) * t)
+    ref_f1 = np.cos(2 * np.pi * (fc - 0.5 * delta_f) * t)
+    ref_f2 = np.cos(2 * np.pi * (fc + 0.5 * delta_f) * t)
+    ref_f3 = np.cos(2 * np.pi * (fc + 1.5 * delta_f) * t)
 
 
     for i in range(0, len(signal), samples_per_symbol):
@@ -58,20 +74,20 @@ def read_signal_bps(filename: str) -> list[int]:
 
          # frequency dictionary
         freq_dict = {
-        correlation_f0: (1, 0),
-        correlation_f1: (1, 1),
-        correlation_f2: (0, 1),
-        correlation_f3: (0, 0)
-    }
+            correlation_f0: (1, 0),
+            correlation_f1: (1, 1),
+            correlation_f2: (0, 1),
+            correlation_f3: (0, 0)
+        }
 
+        # choose the correlation with the highest maximum
+        max_correlation = max(correlation_f0, correlation_f1, correlation_f2, correlation_f3)
+        bits.append(freq_dict[max_correlation])
+    
+    # reshape bits to a 1-D array
+    bits = np.array(bits).reshape(-1)
 
-        # Decide symbol based on higher correlation
-        chosen_freq = tuple(max( correlation_f0, correlation_f1, correlation_f2, correlation_f3))
-        symbol = freq_dict[chosen_freq]
-        signal_bits = [symbol[0], symbol[1]]
-        bits.extend(signal_bits)
-    print(bits)
-    return np.array(bits)
+    return bits
 
 
 def generate_wave_bps(arr):
@@ -109,17 +125,17 @@ def generate_wave_bps(arr):
     t = np.linspace(0, symbol_time, samples_per_symbol, endpoint=False)
 
     # Define frequencies for FSK modulation
-    f0 = fc - (fc / 4)  # Frequency for binary 10
-    f1 = fc + (fc / 4)  # Frequency for binary 11
-    f2 = fc - (fc / 8)  # Frequency for binary 01
-    f3 = fc + (fc / 8)  # Frequency for binary 00
+    f0 = fc - 1.5 * delta_f  # Frequency for binary 10
+    f1 = fc - 0.5 * delta_f  # Frequency for binary 11
+    f2 = fc + 0.5 * delta_f # Frequency for binary 01
+    f3 = fc + 1.5 * delta_f  # Frequency for binary 00
 
     # symbol dictionary
     symbol_dict = {
+        (1, 0): f0,
+        (1, 1): f1,
         (0, 1): f2,
         (0, 0): f3,
-        (1, 1): f1,
-        (1, 0): f0
     }
 
     # Generate the modulated wave
