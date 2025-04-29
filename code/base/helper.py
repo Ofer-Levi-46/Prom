@@ -61,17 +61,16 @@ def generate_wave(arr):
     if len(arr) % 2 != 0:
         arr = np.append(arr, 0)
 
-    # Generate time vector for the entire signal
-    t = np.arange(0, len(arr) * symbol_time, 1 / fs)
+    # Generate time vector for one symbol
+    t = np.linspace(0, symbol_time, samples_per_symbol, endpoint=False)
 
-    # Generate carrier wave at fc
-    carrier = np.cos(2 * np.pi * fc * t)
+    # Define frequencies for FSK modulation
+    f0 = fc - (fc / 4)  # Frequency for binary 0
+    f1 = fc + (fc / 4)  # Frequency for binary 1
 
-    # Generate modulated signal
-    modulated_signal = np.zeros_like(t)
-    for i, bit in enumerate(arr):
-        start_idx = int(i * samples_per_symbol)
-        end_idx = int((i + 1) * samples_per_symbol)
-        modulated_signal[start_idx:end_idx] = (1 + bit) * carrier[start_idx:end_idx]
+    # Generate the modulated wave
+    wave = np.concatenate([
+        np.cos(2 * np.pi * (f1 if bit else f0) * t) for bit in arr
+    ])
 
-    return modulated_signal
+    return wave
