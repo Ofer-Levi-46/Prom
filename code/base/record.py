@@ -23,3 +23,4 @@ def record(filename: str, duration: int = 5) -> None:
     write("records/" + filename, fs, audio)
 
     print("File saved successfully!")
+

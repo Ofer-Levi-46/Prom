@@ -5,16 +5,19 @@ from base.record import record
 import numpy as np
 import wave
 import matplotlib.pyplot as plt
+from base.bps_test import generate_signal_bps
+from base.bps_test import read_signal_bps
+
 
 # ENCODE
 # data = string_to_bits("Hello World")
-# generate_signal(data, "output.wav")
+# generate_signal_bps(data, "output.wav")
 
 # record("record.wav", 5)  # Record audio for 5 seconds
 
 # DECODE
 string = string_to_bits("Hello World")
-data = read_signal("record.wav")
+data = read_signal_bps("record.wav")
 
 # count how many bits in data are different from string
 diff_count = sum(1 for i in range(len(data)) if data[i] != string[i])
