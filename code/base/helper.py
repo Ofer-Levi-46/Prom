@@ -53,15 +53,25 @@ def generate_wave(arr):
         - The modulation scheme used is cosine-based with a phase shift 
           determined by the input binary symbols.
     """
-    if len(arr) % 2 != 0: arr.insert(0, 0)  # Pad with zero if odd length
-    reshaped = np.reshape(arr, (len(arr) // 2, 2))
-    f = lambda x: 2*x[0] + x[1]
-    new_arr = np.apply_along_axis(f, arr=reshaped, axis=1)
 
-    data = np.zeros(len(new_arr) * samples_per_symbol)
-    t_symbol = np.arange(0, symbol_time, 1/fs)
+    # Ensure the input array is a NumPy array
+    arr = np.array(arr)
 
-    for i, x in enumerate(new_arr):
-        data[i * samples_per_symbol : (i + 1) * samples_per_symbol] = np.cos(2 * np.pi * fc * t_symbol + np.pi * (x+1/2)/2)
+    # Pad the array with a zero if its length is odd
+    if len(arr) % 2 != 0:
+        arr = np.append(arr, 0)
 
-    return data
+    # Generate time vector for the entire signal
+    t = np.arange(0, len(arr) * symbol_time, 1 / fs)
+
+    # Generate carrier wave at fc
+    carrier = np.cos(2 * np.pi * fc * t)
+
+    # Generate modulated signal
+    modulated_signal = np.zeros_like(t)
+    for i, bit in enumerate(arr):
+        start_idx = int(i * samples_per_symbol)
+        end_idx = int((i + 1) * samples_per_symbol)
+        modulated_signal[start_idx:end_idx] = (1 + bit) * carrier[start_idx:end_idx]
+
+    return modulated_signal
