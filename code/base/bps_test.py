@@ -43,14 +43,6 @@ def read_signal_bps(filename: str) -> list[int]:
     ref_f2 = np.cos(2 * np.pi * (fc - (fc / 8)) * t)
     ref_f3 = np.cos(2 * np.pi * (fc + (fc / 8)) * t)
 
-    # frequency dictionary
-    freq_dict = {
-        tuple(ref_f0): (1, 0),
-        tuple(ref_f1): (1, 1),
-        tuple(ref_f2): (0, 1),
-        tuple(ref_f3): (0, 0)
-    }
-
 
     for i in range(0, len(signal), samples_per_symbol):
         chunk = signal[i:i + samples_per_symbol]
@@ -64,13 +56,21 @@ def read_signal_bps(filename: str) -> list[int]:
         correlation_f2 = np.max(np.correlate(chunk, ref_f2, mode='valid'))
         correlation_f3 = np.max(np.correlate(chunk, ref_f3, mode='valid'))
 
+         # frequency dictionary
+        freq_dict = {
+        correlation_f0: (1, 0),
+        correlation_f1: (1, 1),
+        correlation_f2: (0, 1),
+        correlation_f3: (0, 0)
+    }
+
 
         # Decide symbol based on higher correlation
         chosen_freq = tuple(max( correlation_f0, correlation_f1, correlation_f2, correlation_f3))
         symbol = freq_dict[chosen_freq]
         signal_bits = [symbol[0], symbol[1]]
         bits.extend(signal_bits)
-
+    print(bits)
     return np.array(bits)
 
 
