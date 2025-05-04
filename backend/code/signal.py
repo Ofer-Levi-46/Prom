@@ -1,5 +1,5 @@
 import numpy as np
-from helper import *
+from .helper import *
 
 delta_f = samples_per_symbol
 
@@ -19,7 +19,6 @@ def read_signal(signal: list[float]) -> list[int]:
     
     start_wave = generate_wave(string_to_bits(record_start_key))
     end_wave = generate_wave(string_to_bits(record_end_key))
-    # plot the correlation of the signal with the start and end waves
 
     start = np.argmax(np.correlate(signal, start_wave, mode='valid'))
     end = np.argmax(np.correlate(signal, end_wave, mode='valid'))

@@ -1,12 +1,23 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const App = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
 
-    const [recording, setRecording] = useState(false);
-    const mediaRecorderRef = useRef(null);
-    const audioChunksRef = useRef([]);
+    useEffect(() => {
+        const eventSource = new EventSource('http://localhost:8000/events');
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.message) {
+                setMessages((prevMessages) => [
+                    ...prevMessages,
+                    { text: data.message, type: 'received' },
+                ]);
+            }
+        };
+        return () => eventSource.close();
+    }, []);
 
     const handleSend = () => {
         if (input.trim()) {
@@ -19,69 +30,8 @@ const App = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ message: input }),
-            })
-                .then((response) => response.json())
-                .then((data) => playAudio(data.wav))
-                .catch((error) => console.error('Error:', error));
-
-            const playAudio = (data) => {
-                const audioContext = new (window.AudioContext ||
-                    window.webkitAudioContext)();
-                const buffer = audioContext.createBuffer(1, data.length, 48000);
-                buffer.getChannelData(0).set(data);
-                const source = audioContext.createBufferSource();
-                source.buffer = buffer;
-                source.connect(audioContext.destination);
-                source.start(0);
-            };
+            }).catch((error) => console.error('Error:', error));
         }
-    };
-
-    const startRecording = async () => {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-        });
-
-        // create a new MediaRecorder instance of wav files recording at a sample rate of 48000 Hz
-        const mediaRecorder = new MediaRecorder(stream, {
-            mimeType: 'audio/wav',
-        });
-        mediaRecorderRef.current = mediaRecorder;
-        audioChunksRef.current = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                audioChunksRef.current.push(event.data);
-                console.log('Audio chunk available:', event.data);
-            }
-        };
-
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunksRef.current, {
-                type: 'audio/mp4',
-            });
-            const reader = new FileReader();
-
-            reader.onloadend = () => {
-                const arrayBuffer = reader.result;
-                const audioContext = new (window.AudioContext ||
-                    window.webkitAudioContext)();
-                audioContext.decodeAudioData(arrayBuffer, (decodedData) => {
-                    const audioDataArray = decodedData.getChannelData(0);
-                    console.log(audioDataArray); // Process or send the audio data array as needed
-                });
-            };
-
-            reader.readAsArrayBuffer(audioBlob);
-        };
-
-        mediaRecorder.start();
-        setRecording(true);
-    };
-
-    const stopRecording = () => {
-        mediaRecorderRef.current.stop();
-        setRecording(false);
     };
 
     return (
@@ -142,31 +92,11 @@ const App = () => {
                         color: '#fff',
                         border: 'none',
                         borderRadius: '8px',
-                        cursor: recording ? 'not-allowed' : 'pointer',
-                        opacity: recording ? 0.5 : 1,
-                        pointerEvents: recording ? 'none' : 'auto',
-                        transition:
-                            'background-color 0.1s ease, opacity 0.1s ease',
                     }}
                 >
                     Send
                 </button>
             </div>
-            <button
-                onClick={recording ? stopRecording : startRecording}
-                style={{
-                    marginTop: '10px',
-                    padding: '10px 15px',
-                    backgroundColor: recording ? '#dc3545' : '#28a745',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    width: '100%',
-                }}
-            >
-                {recording ? 'Stop Recording' : 'Start Recording'}
-            </button>
         </div>
     );
 };
