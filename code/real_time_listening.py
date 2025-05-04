@@ -2,6 +2,7 @@ from base.helper import fs, record_start_key, record_end_key, string_to_bits
 from base.signal import generate_wave, read_signal
 import sounddevice as sd
 import numpy as np
+import errors.error_correction as ec
 
 
 class Listener:
@@ -22,7 +23,7 @@ class Listener:
 
         self.sampling_rate = sampling_rate
         self.start_key = start_key
-        self._key_wave = generate_wave(string_to_bits(start_key))
+        self._key_wave = generate_wave(ec.encode(string_to_bits(start_key)))
         self._is_interested = False
         self._frames = int(sampling_rate * duration)
 
@@ -50,7 +51,7 @@ class Listener:
         # write the record to a file
         self._record = np.concatenate((self._record, signal))
 
-        data = read_signal(self._record)
+        data = ec.decode_hamming(read_signal(self._record))
         decoded_string = ''.join(str(bit) for bit in data)
         decoded_string = ''.join(chr(int(decoded_string[i:i+8], 2)) for i in range(0, len(decoded_string), 8))
         print(f"Final string: {decoded_string}")

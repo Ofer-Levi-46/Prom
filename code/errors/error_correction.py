@@ -2,10 +2,10 @@ import random
 import numpy as np
 
 def encode(data: list[float]) -> list[float]:
-    return data
+    return encode_hamming(data)
 
 def decode(data: list[float]) -> list[float]:
-    return data
+    return decode_hamming(data)
 
 
 def encode_mvp(data: np.ndarray) -> np.ndarray:
@@ -132,4 +132,5 @@ def decode_hamming(encoded_data: np.ndarray) -> np.ndarray:
         # Extract original data bits
         decoded_data.extend([block[2], block[4], block[5], block[6]])
 
+    print("Decoded data:", encoded_data)
     return np.array(decoded_data, dtype=int)
