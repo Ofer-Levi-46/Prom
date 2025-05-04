@@ -30,47 +30,5 @@ def string_to_bits(s):
     Returns:
         numpy.ndarray: A NumPy array containing the bits (0s and 1s) representing the input string.
     """
+    
     return np.array([int(bit) for char in s.encode('utf-8') for bit in format(char, '08b')])
-
-def generate_wave(arr):
-    """
-    Generates a modulated wave signal based on the input binary array.
-
-    The function takes an input binary array, processes it to create a sequence of 
-    symbols, and generates a waveform by modulating these symbols. If the 
-    input array has an odd length, it is padded with a zero to make its 
-    length even.
-
-    Args:
-        arr (list or numpy.ndarray): Input binary array (0s and 1s) representing 
-            the data to be modulated.
-
-    Returns:
-        numpy.ndarray: A 1D array representing the generated modulated wave 
-        signal.
-
-    Notes:
-        - The modulation scheme used is cosine-based with a phase shift 
-          determined by the input binary symbols.
-    """
-
-    # Ensure the input array is a NumPy array
-    arr = np.array(arr)
-
-    # Pad the array with a zero if its length is odd
-    if len(arr) % 2 != 0:
-        arr = np.append(arr, 0)
-
-    # Generate time vector for one symbol
-    t = np.linspace(0, symbol_time, samples_per_symbol, endpoint=False)
-
-    # Define frequencies for FSK modulation
-    f0 = fc - (fc / 4)  # Frequency for binary 0
-    f1 = fc + (fc / 4)  # Frequency for binary 1
-
-    # Generate the modulated wave
-    wave = np.concatenate([
-        np.cos(2 * np.pi * (f1 if bit else f0) * t) for bit in arr
-    ])
-
-    return wave

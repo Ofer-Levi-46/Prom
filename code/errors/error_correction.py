@@ -1,6 +1,12 @@
 import random
 import numpy as np
 
+def encode(data: list[float]) -> list[float]:
+    return data
+
+def decode(data: list[float]) -> list[float]:
+    return data
+
 
 def encode_mvp(data: np.ndarray) -> np.ndarray:
     """

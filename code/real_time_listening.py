@@ -1,43 +1,73 @@
 from base.helper import fs, record_start_key, record_end_key, string_to_bits
-from base.bps_test import generate_wave_bps
+from base.signal import generate_wave, read_signal
 import sounddevice as sd
 import numpy as np
 
+
 class Listener:
-    def __init__(self, sampling_rate, start_key, end_key, duration=0.1):
-        self.sampling_rate = sampling_rate
-        self.start_key = start_key
-        self.end_key = end_key
-        self.frames = int(sampling_rate * duration)
+    """
+    A class to listen for a specific key signal in real-time audio input and process the detected signal.
+    """
 
-    def start_listening(self):
-        # graph the signal live from the microphone
-
-        with sd.InputStream(samplerate=self.sampling_rate, channels=1, blocksize=self.frames) as stream:
-            while True:
-                data = stream.read(self.frames)[0]
-                signal = data.flatten()
-                self.check_interest(signal)
-
-
-    def detect_key(self, signal, key):
+    def __init__(self, sampling_rate: int, start_key: str, end_key: str, duration=0.1):
         """
-        Detects the presence of a specific key in the signal.
+        Initializes the real-time listening object.
 
         Args:
-            signal (numpy.ndarray): The audio signal to search.
-            key (str): The key to detect.
-
-        Returns:
-            bool: True if the key is detected, False otherwise.
+            sampling_rate (int): The sampling rate for audio processing in Hz.
+            start_key (str): The key that triggers the start of the listening process.
+            end_key (str): The key that triggers the end of the listening process.
+            duration (float, optional): The duration of each audio frame in seconds. Defaults to 0.1.
         """
-        # Convert the key to bits
-        key_bits = string_to_bits(key)
-        # Generate the wave for the key
-        key_wave = generate_wave_bps(key_bits)
 
+        self.sampling_rate = sampling_rate
+        self.start_key = start_key
+        self._key_wave = generate_wave(string_to_bits(start_key))
+        self._is_interested = False
+        self._frames = int(sampling_rate * duration)
+
+    def start_listening(self):
+        """
+        Starts listening to an audio input stream and processes the incoming audio data.
+        """
+
+        print("Listening for key...")
+
+        with sd.InputStream(samplerate=self.sampling_rate, channels=1, blocksize=self._frames) as stream:
+            while True:
+                data = stream.read(self._frames)[0]
+                signal = data.flatten()
+                self._check_interest(signal)
+
+    def _on_start_interest(self, signal):
+        print("Key detected! Start recording...")
+        self._record = signal
+    
+    def _while_interest(self, signal):
+        self._record = np.concatenate((self._record, signal))
+
+    def _on_end_interest(self, signal):
+        # write the record to a file
+        self._record = np.concatenate((self._record, signal))
+
+        data = read_signal(self._record)
+        decoded_string = ''.join(str(bit) for bit in data)
+        decoded_string = ''.join(chr(int(decoded_string[i:i+8], 2)) for i in range(0, len(decoded_string), 8))
+        print(f"Final string: {decoded_string}")
+
+    def _check_interest(self, signal):
+        if not self._is_interested and self._detect_key(signal):
+            self._is_interested = True
+            self._on_start_interest(signal)
+        elif self._is_interested and self._detect_key(signal):
+            self._while_interest(signal)
+        elif self._is_interested and not self._detect_key(signal):
+            self._is_interested = False
+            self._on_end_interest(signal)
+
+    def _detect_key(self, signal):
         # Perform correlation
-        correlation = np.correlate(signal, key_wave, mode='valid')
+        correlation = np.correlate(signal, self._key_wave, mode='valid')
         threshold = 5
 
         return np.any(correlation > threshold)

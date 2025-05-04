@@ -1,56 +1,28 @@
 import numpy as np
-from base.helper import string_to_bits
 from base.helper import *
-import scipy.io.wavfile as wavfile
-import matplotlib.pyplot as plt
 
 delta_f = samples_per_symbol
 
 
-def read_signal_bps(filename: str) -> list[int]:
+def read_signal(signal: list[float]) -> list[int]:
     """
-    Reads a signal from a WAV file, demodulates it, and extracts bits encoded in the signal.
+    Reads a signal from an array, demodulates it, and extracts bits encoded in the signal.
 
     Args:
-        filename (str): The name of the WAV file to read. The file is expected to be located
-                        in the 'records/' directory.
+        signal (list[float]): The input signal as a list of float values.
 
     Returns:
-        list[int]: A list of bits (0s and 1s) extracted from the demodulated signal.
-
-    The function performs the following steps:
-    1. Loads the WAV file and normalizes the signal.
-    2. Demodulates the signal using a carrier wave.
-    3. Identifies the start and end markers in the signal using correlation with predefined waves.
-    4. Extracts the portion of the signal between the start and end markers.
-    5. Divides the signal into blocks corresponding to symbols and determines the bit value
-       for each block based on the average of the highest values in the block.
+        list[int]: A list of decoded bits represented as integers (0 or 1).
     """
 
-    # === Load WAV ===
-    data = wavfile.read(f'records/{filename}')[1]
-    signal = (data / 32767.0).astype(np.float32)
     bits = []
-
-    start_wave = generate_wave_bps(string_to_bits(record_start_key))
-    end_wave = generate_wave_bps(string_to_bits(record_end_key))
+    
+    start_wave = generate_wave(string_to_bits(record_start_key))
+    end_wave = generate_wave(string_to_bits(record_end_key))
     # plot the correlation of the signal with the start and end waves
 
     start = np.argmax(np.correlate(signal, start_wave, mode='valid'))
     end = np.argmax(np.correlate(signal, end_wave, mode='valid'))
-
-    # # plot the signal and the start and end waves, all as subplots
-    # plt.subplot(3, 1, 1)
-    # plt.plot(signal)
-    # plt.title('Signal')
-    # plt.subplot(3, 1, 2)
-    # plt.plot(start_wave)
-    # plt.title('Start Wave')
-    # plt.subplot(3, 1, 3)
-    # plt.plot(end_wave)
-    # plt.title('End Wave')
-    # plt.show()
-
     signal = signal[start + len(start_wave):end]
 
     t = np.linspace(0, symbol_time, samples_per_symbol, endpoint=False)
@@ -90,7 +62,7 @@ def read_signal_bps(filename: str) -> list[int]:
     return bits
 
 
-def generate_wave_bps(arr):
+def generate_wave(arr):
     """
     Generates a modulated wave signal based on the input binary array.
 
@@ -106,10 +78,6 @@ def generate_wave_bps(arr):
     Returns:
         numpy.ndarray: A 1D array representing the generated modulated wave
         signal.
-
-    Notes:
-        - The modulation scheme used is cosine-based with a phase shift
-          determined by the input binary symbols.
     """
 
     # Ensure the input array is a NumPy array
@@ -119,7 +87,6 @@ def generate_wave_bps(arr):
     distance = len(arr) % 4
     if distance != 0:
         arr = np.append(arr, np.zeros(distance))  # zero padding
-        """add a mechanism of transmitting number of zeros added"""
 
     # Generate time vector for one symbol
     t = np.linspace(0, symbol_time, samples_per_symbol, endpoint=False)
@@ -148,21 +115,3 @@ def generate_wave_bps(arr):
     wave = np.array(wave_freq)
 
     return wave
-
-
-def generate_signal_bps(arr: np.ndarray, filename: str) -> None:
-    """
-    Generates a wave signal from a given array of bits, appends start and end keys,
-    and saves it as a .wav file.
-
-    Args:
-        arr (numpy.ndarray): The array of bits to be converted into a wave signal.
-        filename (str): The name of the output .wav file to be saved in the 'recordings' directory.
-
-    Returns:
-        None
-    """
-
-    arr = np.concatenate((string_to_bits(record_start_key), arr, string_to_bits(record_end_key)))
-    signal = generate_wave_bps(arr)
-    wavfile.write(f'records/{filename}', fs, (signal * 32767).astype(np.int16))
