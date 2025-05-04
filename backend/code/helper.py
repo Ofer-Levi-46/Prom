@@ -1,9 +1,13 @@
 import numpy as np
 import json
+import os
 
 
 # Read JSON file
-with open('data.json', 'r') as f:
+# Construct the path to the JSON file
+current_dir = os.path.dirname(__file__)
+json_file_path = os.path.join(current_dir, '../../frontend/public/data.json')
+with open(json_file_path, 'r') as f:
     json_data = json.load(f)
 
 # Parameters

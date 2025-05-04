@@ -1,5 +1,5 @@
-from base.helper import fs, record_start_key, record_end_key, string_to_bits
-from base.signal import generate_wave, read_signal
+from helper import fs, record_start_key, record_end_key, string_to_bits
+from signal import generate_wave, read_signal
 import sounddevice as sd
 import numpy as np
 
