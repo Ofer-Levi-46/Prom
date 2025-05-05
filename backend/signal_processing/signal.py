@@ -2,22 +2,13 @@ import numpy as np
 from .helper import *
 from .error_correction import encode
 
-delta_f = samples_per_symbol
+delta_f = symbols_per_second
 
 
 def read_signal(signal: list[float]) -> list[int]:
-    """
-    Reads a signal from an array, demodulates it, and extracts bits encoded in the signal.
-
-    Args:
-        signal (list[float]): The input signal as a list of float values.
-
-    Returns:
-        list[int]: A list of decoded bits represented as integers (0 or 1).
-    """
-
     bits = []
-    
+
+    # Detect preamble
     start_wave = generate_wave(encode(string_to_bits(record_start_key)))
     end_wave = generate_wave(encode(string_to_bits(record_end_key)))
 
@@ -25,41 +16,30 @@ def read_signal(signal: list[float]) -> list[int]:
     end = np.argmax(np.correlate(signal, end_wave, mode='valid'))
     signal = signal[start + len(start_wave):end]
 
+    # Reference tones
     t = np.linspace(0, symbol_time, samples_per_symbol, endpoint=False)
-    ref_f0 = np.cos(2 * np.pi * (fc - 1.5 * delta_f) * t)
-    ref_f1 = np.cos(2 * np.pi * (fc - 0.5 * delta_f) * t)
-    ref_f2 = np.cos(2 * np.pi * (fc + 0.5 * delta_f) * t)
-    ref_f3 = np.cos(2 * np.pi * (fc + 1.5 * delta_f) * t)
+    frequencies = [
+        np.cos(2 * np.pi * (fc - 1.5 * delta_f) * t),
+        np.cos(2 * np.pi * (fc - 0.5 * delta_f) * t),
+        np.cos(2 * np.pi * (fc + 0.5 * delta_f) * t),
+        np.cos(2 * np.pi * (fc + 1.5 * delta_f) * t),
+    ]
+    bit_pairs = [(1, 0), (1, 1), (0, 1), (0, 0)]
 
+    def normalized_dot(a, b):
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
+    # Symbol decoding loop
     for i in range(0, len(signal), samples_per_symbol):
         chunk = signal[i:i + samples_per_symbol]
-
         if len(chunk) < samples_per_symbol:
             continue
 
-        # Correlate with reference signals
-        correlation_f0 = np.max(np.correlate(chunk, ref_f0, mode='valid'))
-        correlation_f1 = np.max(np.correlate(chunk, ref_f1, mode='valid'))
-        correlation_f2 = np.max(np.correlate(chunk, ref_f2, mode='valid'))
-        correlation_f3 = np.max(np.correlate(chunk, ref_f3, mode='valid'))
+        correlations = [normalized_dot(chunk, f) for f in frequencies]
+        bits.append(bit_pairs[np.argmax(correlations)])
 
-         # frequency dictionary
-        freq_dict = {
-            correlation_f0: (1, 0),
-            correlation_f1: (1, 1),
-            correlation_f2: (0, 1),
-            correlation_f3: (0, 0)
-        }
+    return np.array(bits).reshape(-1)
 
-        # choose the correlation with the highest maximum
-        max_correlation = max(correlation_f0, correlation_f1, correlation_f2, correlation_f3)
-        bits.append(freq_dict[max_correlation])
-    
-    # reshape bits to a 1-D array
-    bits = np.array(bits).reshape(-1)
-
-    return bits
 
 
 def generate_wave(arr):

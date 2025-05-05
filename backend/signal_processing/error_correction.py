@@ -1,4 +1,3 @@
-import random
 import numpy as np
 
 def encode(data: list[float]) -> list[float]:

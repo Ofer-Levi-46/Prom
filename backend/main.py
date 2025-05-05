@@ -64,7 +64,7 @@ async def generate_wave_req(request: Request):
     sd.wait()
 
     # set timeout to set is_sending to False
-    time.sleep(0.5)
+    await asyncio.sleep(1.5)
     is_sending = False
     
     return {"status": "ok"}
@@ -81,6 +81,10 @@ def on_end(data):
     if is_sending:
         return
 
+    # remove all characters that are less than 32 and greater than 126
+    data = ''.join(filter(lambda x: 32 <= ord(x) <= 126, data))
+
+    print("Received signal:", data)
     for q in subscribers:
         asyncio.run(q.put(f'{{"message": "{data}"}}'))
 
