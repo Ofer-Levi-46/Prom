@@ -2,64 +2,6 @@ import random
 import numpy as np
 
 def encode(data: list[float]) -> list[float]:
-    return data
-
-def decode(data: list[float]) -> list[float]:
-    return data
-
-
-def encode_mvp(data: np.ndarray) -> np.ndarray:
-    """
-    Encodes the given binary array with naive error correction encoding.
-    This function takes a binary NumPy array as input and applies an error correction
-    encoding mechanism to produce a new binary array with redundancy for error detection/correction.
-
-    Args:
-        data (np.ndarray): The binary array to be encoded.
-    Returns:
-        np.ndarray: The encoded binary array with error correction.
-    """
-    encoded_data = []
-    for i in range(0, len(data), 2):
-        bit_pair = data[i:i + 2]
-        encoded_data.extend(bit_pair)
-        encoded_data.extend(bit_pair)
-        encoded_data.extend(bit_pair)
-    return np.array(encoded_data, dtype=int)
-
-
-def decode_mvp(encoded_data: np.ndarray) -> np.ndarray:
-    """
-    Decodes the given binary array with naive error correction decoding.
-    This function takes a binary NumPy array as input and applies an error correction
-    decoding mechanism to produce a new binary array with the original data.
-
-    Args:
-        encoded_data (np.ndarray): The binary array to be decoded.
-    Returns:
-        np.ndarray: The decoded binary array with the original data.
-    """
-    data = []
-    for i in range(0, len(encoded_data), 6):
-        pair_1 = encoded_data[i:i + 2]
-        pair_2 = encoded_data[i + 2:i + 4]
-        pair_3 = encoded_data[i + 4:i + 6]
-
-        if np.array_equal(pair_1, pair_2):
-            data.extend(pair_1.tolist())
-        else:
-            if np.array_equal(pair_1, pair_3):
-                data.extend(pair_1.tolist())
-            elif np.array_equal(pair_2, pair_3):
-                data.extend(pair_2.tolist())
-            else:
-                random_pair = random.choice([pair_1, pair_2, pair_3])
-                data.extend(random_pair.tolist())
-
-    return np.array(data, dtype=int)
-
-
-def encode_hamming(data: np.ndarray) -> np.ndarray:
     """
     Encodes the given binary array with Hamming SECDED error correction encoding.
     This function takes a binary NumPy array as input and applies an error correction
@@ -93,7 +35,7 @@ def encode_hamming(data: np.ndarray) -> np.ndarray:
     return np.array(encoded_data, dtype=int)
 
 
-def decode_hamming(encoded_data: np.ndarray) -> np.ndarray:
+def decode(data: list[float]) -> list[float]:
     """
     Decodes the given binary array with Hamming SECDED error correction decoding,
     tries to guess two-bit errors if detected.
@@ -106,8 +48,8 @@ def decode_hamming(encoded_data: np.ndarray) -> np.ndarray:
     
     decoded_data = []
 
-    for i in range(0, len(encoded_data), 8):
-        block = encoded_data[i:i + 8]
+    for i in range(0, len(data), 8):
+        block = data[i:i + 8]
         if len(block) < 8:
             continue
 

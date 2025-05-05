@@ -1,5 +1,6 @@
 import numpy as np
 from .helper import *
+from .error_correction import encode
 
 delta_f = samples_per_symbol
 
@@ -17,8 +18,8 @@ def read_signal(signal: list[float]) -> list[int]:
 
     bits = []
     
-    start_wave = generate_wave(string_to_bits(record_start_key))
-    end_wave = generate_wave(string_to_bits(record_end_key))
+    start_wave = generate_wave(encode(string_to_bits(record_start_key)))
+    end_wave = generate_wave(encode(string_to_bits(record_end_key)))
 
     start = np.argmax(np.correlate(signal, start_wave, mode='valid'))
     end = np.argmax(np.correlate(signal, end_wave, mode='valid'))

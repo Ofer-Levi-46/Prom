@@ -1,5 +1,6 @@
 from .helper import fs, record_start_key, record_end_key, string_to_bits
 from .signal import generate_wave, read_signal
+from .error_correction import encode, decode
 import sounddevice as sd
 import numpy as np
 
@@ -22,7 +23,7 @@ class Listener:
 
         self.sampling_rate = sampling_rate
         self.start_key = start_key
-        self._key_wave = generate_wave(string_to_bits(start_key))
+        self._key_wave = generate_wave(encode(string_to_bits(start_key)))
         self._is_interested = False
         self.on_start = on_start
         self.while_interest = on_while_interest
@@ -44,7 +45,6 @@ class Listener:
 
     def _on_start_interest(self, signal):
         self.on_start(signal)
-        print("Key detected! Start recording...")
         self._record = signal
     
     def _while_interest(self, signal):
@@ -55,7 +55,7 @@ class Listener:
         # write the record to a file
         self._record = np.concatenate((self._record, signal))
 
-        data = read_signal(self._record)
+        data = decode(read_signal(self._record))
         decoded_string = ''.join(str(bit) for bit in data)
         decoded_string = ''.join(chr(int(decoded_string[i:i+8], 2)) for i in range(0, len(decoded_string), 8))
 
@@ -77,8 +77,3 @@ class Listener:
         threshold = 5
 
         return np.any(correlation > threshold)
-
-
-if __name__ == "__main__":
-    listener = Listener(fs, record_start_key, record_end_key)
-    listener.start_listening()
