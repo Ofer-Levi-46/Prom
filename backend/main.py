@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from code import generate_wave, Listener, string_to_bits, record_start_key, record_end_key, fs
 from scipy.io.wavfile import write, read
 
+import signal_processing as sig
 import sounddevice as sd
 import numpy as np
 import json
@@ -56,11 +56,11 @@ async def generate_wave_req(request: Request):
 
     is_sending = True
     data = await request.json()
-    message = record_start_key + data['message'] + record_end_key
-    wav_data = generate_wave(string_to_bits(message))
+    message = sig.record_start_key + data['message'] + sig.record_end_key
+    wav_data = sig.generate_wave(sig.encode(sig.string_to_bits(message)))
     wav_data = wav_data / np.max(np.abs(wav_data))  # Normalize the audio data
 
-    sd.play(wav_data, fs)
+    sd.play(wav_data, sig.fs)
     sd.wait()
 
     # set timeout to set is_sending to False
@@ -85,7 +85,7 @@ def on_end(data):
         asyncio.run(q.put(f'{{"message": "{data}"}}'))
 
 def blocking_listener():
-    listener = Listener(fs, record_start_key, record_end_key, on_start, while_interest, on_end)
+    listener = sig.Listener(sig.fs, sig.record_start_key, sig.record_end_key, on_start, while_interest, on_end)
     listener.start_listening()
 
 @app.on_event("startup")
