@@ -6,7 +6,7 @@ import os
 # Read JSON file
 # Construct the path to the JSON file
 current_dir = os.path.dirname(__file__)
-json_file_path = os.path.join(current_dir, '../../frontend/public/data.json')
+json_file_path = os.path.join(current_dir, 'data.json')
 with open(json_file_path, 'r') as f:
     json_data = json.load(f)
 
